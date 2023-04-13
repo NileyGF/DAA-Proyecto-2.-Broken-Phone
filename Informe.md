@@ -1,1 +1,10 @@
-
+- En todo grafo la cantidad de vertices de grado imar es par
+- Max Degree igual n-1 , con n cantidad de vertices
+- Un grafo G es regular de grado k si todos los vertices tienen grado k
+    - No hay grafos regularess de grado k con k impar tal que tienen una cantidad impar de vertices
+- La sumatoria de los grados de los vertices es igual a 2* cantidad de aristas
+- Principio del palomar: si se reparten n objetos entre n-1 posiciones va a haber una posicion con al menos 2 objetos
+    - En un grafo hay al menos dos vertices que tienen el mismo grado
+-Si hay un clique de tamaño n hay un subgrafo kn ahi
+- Todos los subgrafos de un grafo bipartito son bipartitos
+- Si G es bipartito no tiene ciclos de longitud impar y viceversa.** Si G es bipartito todos los caminos son de longitud par
