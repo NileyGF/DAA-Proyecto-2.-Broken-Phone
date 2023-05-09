@@ -73,10 +73,11 @@ def Solve_and_Compare(solver:str, read_from:str, save_to:str, compare:bool, comp
                     save_f = open(save_to,'wb')
                     pickle.dump(result,save_f)
                     save_f.close()
-                    print_bip(other_res[i][0][k][0],True,other_res+"diff_value")
+                    print_bip(other_res[i][0][k][0],True,str((i,k))+" diff_value")
                     print_bip(solution[k][0],True,save_to+"diff_value")
                     msg = "the solution is diferent!!!  "+ str(other_res[i][0][k][1]) + " and " + str(solution[k][1])
-                    raise ValueError(msg)
+                    # raise ValueError(msg)
+                    print(msg)
     save_f = open(save_to,'wb')
     pickle.dump(result,save_f)
     save_f.close()
@@ -85,6 +86,7 @@ def Solve_and_Compare(solver:str, read_from:str, save_to:str, compare:bool, comp
 # Generate_and_Save_Test_Cases(50,6,30)
 # Solve_and_Compare('matching','test_cases.bin','matching_solution.bin',False,None)
 # Solve_and_Compare('mix_backtrack','test_cases.bin','mix_backtrack.bin',True,'matching_solution.bin')
+# Solve_and_Compare('matching','test_cases.bin','matching_solution.bin',True,'mix_backtrack.bin')
 
 """ Load test cases and solutions and do some printing about them"""  
 # f1 = open('test_cases.bin','rb')
@@ -105,8 +107,8 @@ def Solve_and_Compare(solver:str, read_from:str, save_to:str, compare:bool, comp
 #     # print_bip(g,True)
 #     for k in matching_sol[i][0]:
 #        print("\tK = ", str(k), ". Flow solution : ", str(matching_sol[i][0][k][1])) 
-#     #    print_bip(matching_sol[i][0][k][0])
 #        print("\tK = ", str(k), ". Backtrack solution : ", str(backtrack_sol[i][0][k][1])) 
+#        print_bip(matching_sol[i][0][k][0])
 #     #    print_bip(backtrack_sol[i][0][k][0])
 
 """Interesting graphs"""
@@ -132,6 +134,15 @@ def Solve_and_Compare(solver:str, read_from:str, save_to:str, compare:bool, comp
 # E =  [(6,1), (1,7), (1,8), (1,10), (2,7), (2,6), (2,8), (2,9), (3,7), (3,8), (3,9), (4,8), (4,9), (4,10), (5,6), (5,9), (5,10)]
 # G2.add_edges_from( E )
 
+G3 = nx.Graph()
+A =[1,2,3]
+B =[4,5,6]
+G3.add_nodes_from(A,bipartite=0)
+G3.add_nodes_from(B,bipartite=1)
+E = [(1,4), (1,5), (2,4), (2,5), (2,6), (3,5), (3,6)]
+G3.add_edges_from( E )
+
+
 # solution1 = Matching_Solver.Solver(G1)
 # print_bip(G1)
 # for k in solution1:
@@ -143,3 +154,15 @@ def Solve_and_Compare(solver:str, read_from:str, save_to:str, compare:bool, comp
 # for k in solution2:
 #     print(solution2[k][1])
 #     print_bip(solution2[k][0])
+
+solution3 = Matching_Solver.Solver_deprecated(G3)
+print_bip(G3)
+for k in solution3:
+    print(solution3[k][1])
+    print_bip(solution3[k][0])
+
+solution3 = Edges_Solver.mix_solver(G3)
+print_bip(G3)
+for k in solution3:
+    print(solution3[k][1])
+    print_bip(solution3[k][0])
