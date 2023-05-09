@@ -34,7 +34,7 @@ En el archivo Generator.py hay dos funciones:
     def bipartition(G:nx.Graph) -> Tuple[List]:
         ...
 ```
-La primera genera un grafo no dirigido biparito con $n$ vértices y $m$ aristas. Con $$n \in\ [min\_nodes, max\_nodes]$$ $$m \in\ [min(n+3, len(U) * len(V) ), max\_edges]$$ El valor de $m$ se debe a que para el problema son más interesantes los grafos moderadamente densos y los densos, ya que si hay vértices aislados, $MinDegree(G) = 0$ y solo se comprueba $k=0$, que además es un caso trival.
+La primera genera un grafo no dirigido biparito con $n$ vértices y $m$ aristas. Con $$n \in\ [min nodes, max nodes]$$ $$m \in\ [min(n+3, len(U) * len(V) ), max edges]$$ El valor de $m$ se debe a que para el problema son más interesantes los grafos moderadamente densos y los densos, ya que si hay vértices aislados, $MinDegree(G) = 0$ y solo se comprueba $k=0$, que además es un caso trival.
 La segunda, dado un grafo, generado por el método anterior, devuelve las 2 particiones.
 ### Tester
 El archivo Tester.py tiene 2 funciones para graficar grafos, utilizando fundamentalmente funcionalidades de networkx. Además está: ``` Generate_and_Save_Test_Cases(test_cases, min_n, max_n) ```.
@@ -43,21 +43,21 @@ Genera x grafos (x=test_cases) aleatorios con la función descrita en la secció
 
 Por último está ```Solve_and_Compare(solver:str, read_from:str, save_to:str, compare:bool, compare_to:str)```  que dependiendo de los parámetros con que se invoque además de resolver los casos de prueba, comprara su solución con otra específicada.
 
-Para lograr esto fue diseñado un formato de soluciones que consiste en un diccionario que tiene como llaves, los valores válidos de k para el grafo en cuestión, y como valores una tupla con el subgrafo mínimo y la cantidad mínima (de vértices o aristas). Este último es el que se compara, ya que un grafo puede tener más de un subgrafo mínimo para el mismo valor de k.
+Para lograr esto fue diseñado un formato de soluciones que consiste en un diccionario que tiene como llaves, los valores válidos de k para el grafo en cuestión ( de 0 a $MinDegree$), y como valores una tupla con el subgrafo mínimo y la cantidad mínima (de vértices o aristas). Este último es el que se compara, ya que un grafo puede tener más de un subgrafo mínimo para el mismo valor de k.
 
 ## Vertices_Solver.py
 
 # Orientación 2.0:
 
 
-    Kevin estaba leyendo un libro sobre Diseño y Análisis de Algoritmos cuando se topó con un problema que llamó su atención. El texto era el siguiente:
+Kevin estaba leyendo un libro sobre Diseño y Análisis de Algoritmos cuando se topó con un problema que llamó su atención. El texto era el siguiente:
 
 Se tiene un grafo bipartito $G$ con $U$ nodos en el la primera parte y $V$ nodos en la segunda parte. Un subgrafo de $G$ está $k-cubierto$ si todos sus nodos tienen al menos grado $k$. Un subgrafo $k-cubierto$ es mínimo si su cantidad de **aristas** es la mínima posible. Encuentre el mínimo grafo $k-cubierto$ para todo $k$ entre $0$ y $MinDegree$ (grado mínimo del grafo $G$).
     
-    Luego de entender el problema, automáticamente pensó dos cosas:
+Luego de entender el problema, automáticamente pensó dos cosas:
 
-    * Quiero resolver este problema.
-    * ¿A los profesores se les habrá acabado la imaginación para los textos de los proyectos?
+* Quiero resolver este problema.
+* ¿A los profesores se les habrá acabado la imaginación para los textos de los proyectos?
 
 La diferencia significativa (y tanto), es el criterio para que un grafo $k-cubierto$ sea mínimo en la Orientación 1.0 era la mínima cantidad de **vértices** posible, mientras que en la Orientación 2.0 es la mínima cantidad de **aristas** posible. 
 
@@ -219,7 +219,9 @@ Que por la regla del producto es:   ``Costo _del_for = O(k * n * m^2)``
 
 Entonces:
 
-`` T(n,m,k) = Costo_antes_del_for + Costo_del_for =  O(n+m) +   O(k * n * m^2) =  O( max{n+m, k * n * m^2 } ) = O(k * n * m^2)``
+`` T(n,m,k) = Costo_antes_del_for + Costo_del_for =  O(n+m) +   O(k * n * m^2) =  O( max{n+m, k * n * m^2 } ) ``
+
+`` T(n,m,k) = O(k * n * m^2) ``
 
 ### **Demostración de correctitud**
 
@@ -229,13 +231,14 @@ La demostración de correctitud pasa por demostrar varios puntos importantes:
 
 Durante el intento de demostrar esta proposición encontramos un contra-ejemplo, que demuestra que la subestructura óptima no existe, o al menos no bottom-up. 
 
+![](counter_example.png)
 
 En la imagen se puede observar que como la solución para k=2 se construye a partir de la solución encontrada para k=1, contiene una arista más que la solución real. 
 
 
 ## **Solución de multi-emparejamientos #2**
 
-Nuestra última propuesta es realizar una modificación de la solución anterior, pero con un poco más de costo computacional, ya que no reutilizaremos la solución de (i-1) para crear la solución de (i). EN lugar de hacer un emparejamiento, proponemos un flujo para cada k, de forma que el flujo máximo contenga la mayor cantidad de nodos con grado exantamente k que se puede obtener. Luego se adicionan la menor cantidad de aristas posibles para garantizar que los nodos que aun no tengan grado k, lo alcancen.
+Nuestra última propuesta es realizar una modificación de la solución anterior, pero con un poco más de costo computacional, ya que no reutilizaremos la solución de (i-1) para crear la solución de (i). En lugar de hacer un emparejamiento, proponemos un flujo para cada k, de forma que el flujo máximo contenga la mayor cantidad de nodos con grado exactamente k que se puede obtener. Luego se adicionan la menor cantidad de aristas posibles para garantizar que los nodos que aun no tengan grado k, lo alcancen.
 
 ```
 def Solver(G:nx.Graph) -> List[Tuple[nx.Graph,int]]:
@@ -253,3 +256,126 @@ def Solver(G:nx.Graph) -> List[Tuple[nx.Graph,int]]:
     return solution
 ```
 Podemos observar que el constructor del grafo para el flujo, en lugar de recibir 1 como paramétro para las capacidades, recibe el i actual. Por otro lado, las 2 funciones posteriores al flujo fueron sustituidas por  ```get_everyone_to_k```. Y eso es todo. 
+
+Al crear el grafo dirigido sobre el que se realiza el flujo, se crea un nodo artificial ```s``` conectado a la primera partición, con capacidad i (el k de la presente iteración) entre cada arista que va desde ```s``` a loa vértices de U. Luego las aristas originales se transforman en dirigidas con los arcos desde U hasta V, con capacidad 1 (para que solo puedan ser utilizadas una vez). Cada vértice de V entonces se conecta con el otro nodo artificial ```t```, y cada arco que va hacia ```t``` tiene capacidad i. Con esta forma de asignar las capacidades buscamos que por cada vértice solo pueda entrar y salir a lo sumo i flujo, esto implica que en el flujo máximo los nodos van a tener a lo sumo grado k (contando solo las aristas saturadas), y además como el flujo maximiza, será la mayor cantidad de vértices con grado k que se pueden obtener. 
+
+¿Cuál es la magia en ```get_everyone_to_k```?
+```
+def get_everyone_to_k(G:nx.Graph, R:nx.DiGraph,k:int):
+    satured = []
+    queue = []
+    for v, attr in R.succ['s'].items(): 
+        queue.append(v)
+    
+    for u in queue: 
+        for v, attr in R.succ[u].items(): 
+            # satured edges that belonged in the original graph
+            if (attr["flow"] == attr["capacity"]) and (v in G[u]):
+                satured.append((u,v))
+
+    G_p = G.copy()
+    G_p.clear_edges()
+    G_p.add_edges_from(satured)
+
+    k_cover, nodes_to_fix = K_cover(G_p,k)
+    add_edges = edges_between_lesser_k(G,nodes_to_fix)
+    for u, v in add_edges:
+        if G_p.degree[u] < k or G_p.degree[v] < k:
+            G_p.add_edge(u,v)
+    return G_p, G_p.number_of_edges()
+```
+Reutilizando y modificando un poco la función de las primeras dos soluciones:
+```
+def edges_between_lesser_k(G:nx.Graph, lesser_k:List[int]):
+    # edges between lesser k (edges between nodes with degree < k)
+    eblk = [] 
+    # edges between nodes where one of them has degree < k
+    one_is_lesser_k = []
+    for u, v in G.edges():
+        if u in lesser_k and v in lesser_k:
+            eblk.append((u,v))
+        elif u in lesser_k or v in lesser_k:
+            one_is_lesser_k.append((u,v))
+    if len(eblk) > 0:
+        raise Exception(" the matching wasn't max ")
+    return eblk + one_is_lesser_k
+```
+
+Entonces, describiendo lo que pasa en las funciones anteriores. Primero, bfs-like, se capturan todos los nodos de la primera partición (U), y se guardan todas las aristas que salgan de ellos que estén saturadas. Luego se crea un grafo solo con esas aristas. Se comprueba si ya es k_cubierto, y si no lo es se obtienen los nodos que aun no tienen grado k. 
+
+En ```edges_between_lesser_k``` se obtienen todas las aristas que inciden sobre dichos nodos, destacando que no puede quedar ninguna entre 2 nodos con grado menor que k, porque el flujo la hubiese encontrado. 
+
+Para finalizar por cada una de las aristas obtenidas (u,v) , se comprueba si u o v tienen grado menor que k, y en ese caso se adiciona al subgrafo que se está construyendo. De esta forma, todos los vértices con grado menor que k llegarán a grado k con la menor cantidad de aristas posibles, garantizando que el subgrafo sea mínimo todo el tiempo y haciendolo $k-cubierto$. 
+
+O sea, utilizamos la idea de llevar una solución mejor que la óptima y la hacemos factible.
+
+### **Complejidad temporal**
+
+El tiempo antes del ```for``` es el mismo que en algoritmo anterior, ya que la modificación es posterior. Entonces ``Costo_antes_del_for = O(n+m)``
+
+- El ```for``` ocurre k veces.
+
+    - Crear el grafo dirigido es $ O(n+m)$
+
+    - El algoritmo de hallar el flujo máximo  no fue modificado por lo que es $O(n * m^2)$
+
+    - ```get_everyone_to_k``` 
+        
+        - obtiene las aristas saturadas en $O(m)$ 
+
+        - crea el subgrafo con las aristas saturadas en $O(n+m)$
+
+        - saber si es $k-cubierto$ y obtener los nodos con grado menor que k es $O(n+m)$
+        
+        - obtener las aristas incidentes en nodos con grado menor que k es $O(m)$
+
+        - llevar a la solución factible, donde todos los vértices tienen grado k es $O(m)$
+
+
+La complejidad temporal del algoritmo se puede representar como: ``T(n,m,k) = Costo_antes_del_for + Costo_del_for``
+
+``Costo_antes_del_for = O(n+m)``
+
+``Costo _del_for = O(k) * ( O(n+m) + O(n * m^2) +  ( O(m) + O(n+m) + O(n+m) + O(m) + O(m) ) )``
+    
+``Costo _del_for = O(k) * ( O(n+m) + O(n * m^2) + O(n+m) )``
+
+``Costo _del_for = O(k) * ( O( max{ n+m, n * m^2) )``
+
+``Costo _del_for = O(k) * O( n * m^2)``
+ 
+Que por la regla del producto es:   ``Costo _del_for = O(k * n * m^2)``
+
+Entonces:
+
+`` T(n,m,k) = Costo_antes_del_for + Costo_del_for =  O(n+m) +   O(k * n * m^2) =  O( max{n+m, k * n * m^2 } ) ``
+
+`` T(n,m,k) = O(k * n * m^2) ``
+
+### **Demostración de correctitud**
+
+* Con el flujo se obtiene la mayor cantidad de nodos con grado k
+
+    Supongamos que $|U| \geq\ |V|$, en este caso el valor del flujo está limitado por el flujo de V a t, que es $|V|*k$, pues cada arista de V a t tiene capacidad k. 
+
+    Si no, $|U| < |V|$, en este caso el limite es el flujo que sale de s, que solo puede ser $|U|*k$.
+    Por ello podemos concluir que el flujo máximo es $f \leq\ Min(|U|,|V|) * k$. Ya que cuando se saturen todas las aristas de s a U, o de V a t; no quedarán caminos aumentativos, en el grafo residual, de s a t. 
+
+    Todos los vértices tienen grado $\geq k$, porque los k solo van hasta MinDegree.  
+
+    Por cada vértice puede pasar a lo sumo k de flujo (porque o solo recibe k de s, o solo le puede enviar k a t).
+
+    El flujo máximo tiene la mayor capacidad saturada  y como todas las aristas entre U y V tienen capacidad 1 eso es equivalente a decir que tiene la mayor cantidad de aristas entre U y V saturadas. 
+
+    Eso se traduce en que al terminar el flujo se obtienen la mayor suma de grados de los vértices donde todos tienen a lo sumo grado k. Eso implica que los que aún no tienen grado k necesitan enlazarse con nodos con grado mayor que k para alcanzar el grado k y con él la $k-cobertura$ del subgrafo.
+
+    El valor del flujo es a lo sumo $Min(|U|,|V|) * k \leq\ Max(|U|,|V|) * k \leq\ $ la mínima cantidad de aristas de un subgrafo $k-cubierto$. Así que hasta ahora tenemos un subgrafo con menos aristas que el mínimo subgrafo $k-cubierto$.
+
+* poner aristas en los nodos con grado menor que k hasta que alcancen grado k, resulta en la menor cantidad de aristas, por lo que el subgrafo cuando es $k-cubierto$, es mínimo. 
+
+    Para que la solución sea factible es necesario que todos los nodos tengan al menos grado k, pero eso no se garantiza en el flujo. Por ello es necesario analizar los vértices que aun no tienen grado k. 
+
+    En primer lugar, no quedan aristas no saturadas en el flujo entre 2 vértices con grado menor que k. Si ambos tienen grado menor que k había un camino de s a uno y de t a otro, si además había una arista entre ellos, no saturada, entonces hubiera un camino de s a t, luego el flujo no habría terminado. Entonces por reducción al absurdo no se pueden poner aristas entre 2 vértices con grado menor que k.
+
+    Para que el subgrafo sea $k-cubierto$ hay que utilizar $x_i$ aristas por cada vértice i ($x_i = k - deg(i)$). Estas aristas existen, ya que en G, todos los vértices tienen al menos k aristas. No se pueden utilizar menos aristas que esas. Entonces el subgrafo que se obtiene de  llevar todos los nodos a grado k es mínimo. 
+
