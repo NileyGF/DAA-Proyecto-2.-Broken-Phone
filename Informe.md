@@ -1,11 +1,12 @@
 # DAA Proyecto 2. Broken Phone
 
-    Autores:
+Autores:
 
-    Niley González Ferrales C411    @NileyGF
-    Arian Pazo Valido C311          @ArPaVa
+Niley González Ferrales C411    [@NileyGF](https://github.com/NileyGF)
 
-El segundo proyecto de la asignatura Diseño y Análisis de Algoritmos corresponde a la temática de Teoría de Grafos. El problema que nos corresponde analizar sufrió cambios en el proceso, por ello primero se ve un análisis de la **Orientación 1.0** dónde se evidenciarán, relativamente, nuestros avances hasta el momento de la **Orientación 2.0** . Por último se analiza el problema modificado.
+Arian Pazo Valido C311          [@ArPaVa](https://github.com/ArPaVa)
+
+El segundo proyecto de la asignatura Diseño y Análisis de Algoritmos corresponde a la temática de Teoría de Grafos. El problema que nos corresponde analizar sufrió cambios en el proceso, por ello primero se ve un análisis de la [**Orientación 1.0**](#Orientación-1.0:) dónde se evidenciarán, relativamente, nuestros avances hasta el momento de la [**Orientación 2.0**](#Orientación-2.0:) . Por último se analiza el problema modificado.
 
 # Orientación 1.0:
 
@@ -26,6 +27,7 @@ Dado un grafo no dirigido, bipartito $G = ((U \cup\ V) , E )$, con $U$ nodos en 
 
 ### Networkx
 La biblioteca más empleada es networkx, aprovechando la estructura de grafos que definen, que permite diseñar grefos bipartitos y guardar la bipartición, graficar comodamente grafos, así como soporte para grafos no dirigidos y dirigidos.
+
 ### Generador
 En el archivo Generator.py hay dos funciones: 
 ```
@@ -36,6 +38,7 @@ En el archivo Generator.py hay dos funciones:
 ```
 La primera genera un grafo no dirigido biparito con $n$ vértices y $m$ aristas. Con $$n \in\ [min nodes, max nodes]$$ $$m \in\ [min(n+3, len(U) * len(V) ), max edges]$$ El valor de $m$ se debe a que para el problema son más interesantes los grafos moderadamente densos y los densos, ya que si hay vértices aislados, $MinDegree(G) = 0$ y solo se comprueba $k=0$, que además es un caso trival.
 La segunda, dado un grafo, generado por el método anterior, devuelve las 2 particiones.
+
 ### Tester
 El archivo Tester.py tiene 2 funciones para graficar grafos, utilizando fundamentalmente funcionalidades de networkx. Además está: ``` Generate_and_Save_Test_Cases(test_cases, min_n, max_n) ```.
 
@@ -45,10 +48,21 @@ Por último está ```Solve_and_Compare(solver:str, read_from:str, save_to:str, c
 
 Para lograr esto fue diseñado un formato de soluciones que consiste en un diccionario que tiene como llaves, los valores válidos de k para el grafo en cuestión ( de 0 a $MinDegree$), y como valores una tupla con el subgrafo mínimo y la cantidad mínima (de vértices o aristas). Este último es el que se compara, ya que un grafo puede tener más de un subgrafo mínimo para el mismo valor de k.
 
-## Vertices_Solver.py
+## Ideas a cerca del problema
+
+En primer lugar: el subgrafo con la menor cantidad de vértices donde todos tienen grado mayor o igual a k, es un subgrafo de una de las componentes conexas de G. O en otras palabras, no existe una solución que tenga más de una componente conexa. 
+
+Supongamos que la hubiese, entonces todos los nodos tienen grado mayor o igual que k y hay más de una componente conexa, quitemoslas todas menos una ($CC_1$). Al quitar el resto de componentes no se modificó ninguna arista o vértice de $CC_1$. Entonces si los vértices de $CC_1$ tenían grado al menos k antes, ahora siguen teniendolo. Luego en $CC_1$ todos los vértices tienen grado  mayor o igual que k y es menor que la solución propuesta. Entonces esa solución no era mínima. Por lo que podemos concluir que no existe una solución que tenga más de una componente conexa. 
+
+Nuestra idea de solución fue (para un k específico) obtener todas las componentes conexas e iterar sobre ellas obteniendo el subgrafo con menor cantidad de vértices con grado mayor o igual a k, si el resultado es mejor que el mínimo actual se actualiza. Al terminar todas las componentes conexas conocemos el mínimo subgrafo para k.
+
+Hasta ahí todo muy bien, pero no encontramos ninguna forma que no fuese hacer backtrack, para dado una componente conexa y un k, devolver el subgrafo $k-cubierto$ con la menor cantidad de vértices.
+
+Sin embargo concebimos una poda que acelera mucho el algoritmo en todos los casos donde se alcance la mínima cantidad de nodos, o sea, k*2. Ese es el mínimo porque como el grafo es bipartito para que algún vértice tenga grado k, tiene que estar conectado con k nodos del otro lado de la bipartición. Entonces la menor cantidad de nodos tal que todos tienen grado al menos k, es k nodos en U y k nodos en V.
+
+
 
 # Orientación 2.0:
-
 
 Kevin estaba leyendo un libro sobre Diseño y Análisis de Algoritmos cuando se topó con un problema que llamó su atención. El texto era el siguiente:
 
@@ -67,31 +81,36 @@ Dado un grafo no dirigido, bipartito $G = ((U \cup\ V) , E )$, con $U$ nodos en 
 
 ## Definiciones y demostraciones relevantes al problema:
 
-1. Para todo grafo G, La sumatoria de los grados de los vértices es igual a 2 veces la cantidad de aristas.
+1. Sean G y H grafos. Se dice que H es un **subgrafo incorporado** de G si tienen los mismos vértices. O sea, H sería el resultado de quitar 0 o más aristas de G.
+
+2. Para todo grafo G, La sumatoria de los grados de los vértices es igual a 2 veces la cantidad de aristas.
 
     Demostración:
 
     Como el grado de un vértice consta de la cantidad de aristas que inciden en él, al sumar todos los grados en un grafo se tienen en cuanta todas las aristas. Como cada arista incide en 2 vértices se suman las aristas exactamante 2 veces. Luego, la suma de los grados es 2 veces la cantidad de aristas (2*m).
 
-2. Un grafo G es regular de grado k si todos los vértices tienen grado k
-
-2. Sean G y H grafos. Se dice que H es un **subgrafo incorporado** de G si tienen los mismos vértices. O sea, H sería el resultado de quitar 0 o más aristas de G.
+<!-- 2. Un grafo G es regular de grado k si todos los vértices tienen grado k -->
+Sobre grafos bipartitos:
 
 1. Un grafo $G(V,E)$ es bipartito si V es la unión de dos conjuntos independientes disjuntos A y B. Ningún vértice de A es adyacente a otro de A y análogo para B.
 
-3. Un grafo G es bipartito si y solo si no tiene ciclos de longitud impar.
+2. Un grafo G es bipartito si y solo si no tiene ciclos de longitud impar.
 
-2. Un grafo G es **bipartito completo** si es bipartito y cada vértice de uno de los 2 conjuntos es adyacente a todos los vértices del otro conjunto.
+3. Un grafo G es **bipartito completo** si es bipartito y cada vértice de uno de los 2 conjuntos es adyacente a todos los vértices del otro conjunto.
 
-3. El grafo bipartito completo con $n_1$ vértices en un conjunto y $n_2$ en el otro se denota $K_{n_1 , n_2}$. Tiene $n_1 * n_2$ aristas.
+4. El grafo bipartito completo con $n_1$ vértices en un conjunto y $n_2$ en el otro se denota $K_{n_1 , n_2}$. Tiene $n_1 * n_2$ aristas.
 
-4. Un grafo bipartito $G = ((U \cup\ V) , E )$ tiene a lo sumo $|U| * |V|$ aristas. 
+5. Un grafo bipartito $G = ((U \cup\ V) , E )$ donde $|U| = |V|$ decimos que el grafo bipartito G es **balanceado**.
+
+6. Si todos los vértices del mismo lado de la bipartición tienen el mismo grado, entonces G es llamado grafo **birregular**.
+
+7. Un grafo bipartito $G = ((U \cup\ V) , E )$ tiene a lo sumo $|U| * |V|$ aristas. 
 
     Demostración:
 
     Si es bipartito completo, tiene $|U| * |V|$ aristas. Si no, entonces tiene menos aristas que el bipartito completo para los mismos conjuntos de vértices, ya que no puede haber más aristas que todos los del conjunto U enlazados con todos los del conjunto V y seguir siendo bipartito.
 
-4. Todos los subgrafos de un grafo bipartito son bipartitos.
+8. Todos los subgrafos de un grafo bipartito son bipartitos.
 
     Demostración:
 
@@ -99,15 +118,13 @@ Dado un grafo no dirigido, bipartito $G = ((U \cup\ V) , E )$, con $U$ nodos en 
     Como H es el resultado de quitar vértices o aristas de G, los vértices de H son subconjunto de los vértices de G y las aristas de H son subconjunto de las aristas de G. Entonces, todas las aristas de $C$ están en G; luego $C$ está en G. Sin embargo G no puede contener un ciclo de longitud impar porque es bipartito. Entonces hay una contradicción y por reducción al absurdo H no puede tener ciclos de longitud impar. Si H no tiene ciclos delongitud impar entonces H es bipartito.
     Luego todo subgrafo de un grafo bipartito es bipartito.
 
-5. Un grafo bipartito $G = ((U \cup\ V) , E )$ donde $|U| = |V|$ decimos que el grafo bipartito G es **balanceado**.
 
-6. Si todos los vértices del mismo lado de la bipartición tienen el mismo grado, entonces G es llamado grafo **birregular**.
 
 ### **Definiciones particulares del problema**
 
-1. El grado del vértice con mayor grado en un grafo bipartito está acotado por la cantidad de vértices en la otra bipartición. Luego, $MaxDegree(G) \leq\ Max(|U|, |V|) $ 
+1. El grado del vértice con mayor grado en un grafo bipartito está acotado por la cantidad de vértices en la otra bipartición. Luego, $MaxDegree(G) \leq\ Max(|U|, |V|) $.
 
-2. En un grafo donde todos los vértices tienen grado k, $n =|U| + |V|$, la sumatoria de los grados de los vertices del grafo es $n*k$. Por el teorema anterior  $n*k  = 2*m$. Luego, en un grafo donde todos los vértices tienen grado k, hay  $n*k \over 2 $ aristas.
+2. En un grafo donde todos los vértices tienen grado k, $n =|U| + |V|$, la sumatoria de los grados de los vértices del grafo es $n*k$. Por el teorema anterior  $n*k  = 2*m$. Luego, en un grafo donde todos los vértices tienen grado k, hay  $n*k \over 2 $ aristas.
 
 3. En un grafo $k-cubierto$ la cantidad de aristas es $ \geq\ $ $ n*k \over 2 $.
 
@@ -119,11 +136,11 @@ Esta cota de la mínima cantidad de aristas que se necesitan para ser $k-cubiert
     
     El subgrafo $k-cubierto$ H tiene como mínimo $ n*k \over 2 $ aristas.
 
-    Si el grafo G es balanceado entonces $n=2*|U| = 2*|V|$, por lo que H tiene al menos $ 2*|U|*k \over 2 $ $ = |U| * k$   aristas. Como $|U| = |V|$,  $|U| * k = Max(|U|, |V|)*k$, luego,queda demostrado par el caso donde G es balanceado.
+    Si el grafo G es balanceado entonces $n=2*|U| = 2*|V|$, por lo que H tiene al menos $ 2*|U|*k \over 2 $ $ = |U| * k$   aristas. Como $|U| = |V|$,  $|U| * k = Max(|U|, |V|)*k$; luego, queda demostrado para el caso donde G es balanceado.
 
     Si G no es balanceado, sin pérdida de generalidad $|U| > |V|$. Si todos los nodos de U tienen al menos grado k entones de ellos salen $\geq\ |U| * k$ aristas, ya que de cada uno deben salir al menos k. Luego, en el grafo hay al menos $|U| * k =  Max(|U|, |V|)*k$ aristas.
 
-5. Si en un grafo bipartito es $k-cubierto$ mínimo y no es balanceado, existen vértices de la partición de menor tamaño que tienen grado mayor estricto que k.
+5. Si un grafo bipartito es $k-cubierto$ mínimo y no es balanceado, existen vértices de la partición de menor tamaño que tienen grado mayor estricto que k.
 
     Demostración:
     
@@ -133,7 +150,43 @@ Esta cota de la mínima cantidad de aristas que se necesitan para ser $k-cubiert
 
 ## **Soluciones al problema:**
 
-Diseñamos dos algoritmos que utiliando backtrack encuentran el mínimo subgrafo $k-cubierto$. Una lo hace quitando aristas del grafo original (top_down) y la otra poniendo las aristas del grafo a partir del subgrafo constituido solo por vértices (bottom_up).
+Diseñamos dos algoritmos que utilizando backtrack encuentran el mínimo subgrafo $k-cubierto$. Uno lo hace quitando aristas del grafo original (top_down) y la otra poniendo las aristas del grafo a partir del subgrafo constituido solo por vértices (bottom_up). Además realizamos un acercamiento utilizando un algoritmo de flujo. 
+
+## **Solución backtrack top-down**
+
+Dado el grafo G original y un valor k (entre 0 y $MinDegree$) el algoritmo comprueba cuántos nodos en G tienen grado mayor que k. Ya que si quedan por quitar aristas, serían entre esos nodos. Luego, se hace una lista de todas las aristas que están entre nodos con grado mayor que k. Si la lista es vacía significa que es una solución minimal, o sea, un caso base de la recursividad, y retorna el grafo recibido. Por otro lado, si se pueden quitar aristas se hace un llamado recursivo por cada una, para obtener el mínimo si se quitara esa arista en este momento. Si algún llamado recursivo mejora el mínimo del grafo recibido como parámetro o de alguna arista anterior, se actualiza el mínimo. 
+
+Además el algoritmo recibe como parámetro ``prune_min`` que es igual al $Max(|U|, |V|)$ y se utiliza para podar la recursividad ya que si la cantidad de aristas mínimas en algún punto es igual a $Max(|U|, |V|)*k=$ prune_min $*k$, nunca se va a mejorar esa solución. 
+
+```
+def backtrack_top_down_recursive(G:nx.Graph, k:int, prune_min:int):
+    min_graph = G
+    min_n_edges = G.number_of_edges()    
+    k_cover, greater_k = K_cover(G,k)
+    
+    removable_edges = edges_between_greater_k(G,greater_k)
+    if len(removable_edges) == 0 or min_n_edges == (G.number_of_nodes()/2)*k:
+        # base case
+        return min_graph, min_n_edges
+    
+    for edge in removable_edges:
+        G_p = G.copy()
+        G_p.remove_edge(*edge)
+        e_min_gr, e_min_n_e = backtrack_top_down_recursive(G_p,k,prune_min)
+        if e_min_n_e < min_n_edges:
+            min_graph = e_min_gr
+            min_n_edges = e_min_n_e
+        if min_n_edges == (prune_min)*k:
+            return min_graph, min_n_edges
+        
+    return min_graph, min_n_edges
+```
+
+En esta implementación se mantiene la invariante de que el grafo siempre es $k-cubierto$, ya que solo se quitan aristas 'seguras' (o sea, entre vértices con grado mayor estricto que k). 
+
+## **Solución backtrack bottom-up**
+
+## **Solución backtrack mix-solver**
 
 explicación .............................
 
@@ -238,7 +291,7 @@ En la imagen se puede observar que como la solución para k=2 se construye a par
 
 ## **Solución de multi-emparejamientos #2**
 
-Nuestra última propuesta es realizar una modificación de la solución anterior, pero con un poco más de costo computacional, ya que no reutilizaremos la solución de (i-1) para crear la solución de (i). En lugar de hacer un emparejamiento, proponemos un flujo para cada k, de forma que el flujo máximo contenga la mayor cantidad de nodos con grado exactamente k que se puede obtener. Luego se adicionan la menor cantidad de aristas posibles para garantizar que los nodos que aun no tengan grado k, lo alcancen.
+Nuestra última propuesta es realizar una modificación de la solución anterior, pero con un poco más de costo computacional, ya que no reutilizaremos la solución de (i-1) para crear la solución de (i). En lugar de hacer un emparejamiento, proponemos un flujo para cada k, de forma que el flujo máximo contenga la mayor cantidad de nodos con grado exactamente k que se puede obtener. Luego se adicionan la menor cantidad de aristas posibles para garantizar que los nodos que aún no tengan grado k, lo alcancen.
 
 ```
 def Solver(G:nx.Graph) -> List[Tuple[nx.Graph,int]]:
@@ -257,7 +310,7 @@ def Solver(G:nx.Graph) -> List[Tuple[nx.Graph,int]]:
 ```
 Podemos observar que el constructor del grafo para el flujo, en lugar de recibir 1 como paramétro para las capacidades, recibe el i actual. Por otro lado, las 2 funciones posteriores al flujo fueron sustituidas por  ```get_everyone_to_k```. Y eso es todo. 
 
-Al crear el grafo dirigido sobre el que se realiza el flujo, se crea un nodo artificial ```s``` conectado a la primera partición, con capacidad i (el k de la presente iteración) entre cada arista que va desde ```s``` a loa vértices de U. Luego las aristas originales se transforman en dirigidas con los arcos desde U hasta V, con capacidad 1 (para que solo puedan ser utilizadas una vez). Cada vértice de V entonces se conecta con el otro nodo artificial ```t```, y cada arco que va hacia ```t``` tiene capacidad i. Con esta forma de asignar las capacidades buscamos que por cada vértice solo pueda entrar y salir a lo sumo i flujo, esto implica que en el flujo máximo los nodos van a tener a lo sumo grado k (contando solo las aristas saturadas), y además como el flujo maximiza, será la mayor cantidad de vértices con grado k que se pueden obtener. 
+Al crear el grafo dirigido sobre el que se realiza el flujo, se crea un nodo artificial ```s``` conectado a la primera partición, con capacidad $i$ (el k de la presente iteración) entre cada arista que va desde ```s``` a loa vértices de U. Luego las aristas originales se transforman en dirigidas con los arcos desde U hasta V, con capacidad 1 (para que solo puedan ser utilizadas una vez). Cada vértice de V entonces se conecta con el otro nodo artificial ```t```, y cada arco que va hacia ```t``` tiene capacidad $i$. Con esta forma de asignar las capacidades buscamos que por cada vértice solo pueda entrar y salir a lo sumo i flujo, esto implica que en el flujo máximo los nodos van a tener a lo sumo grado $i$ (contando solo las aristas saturadas), y además como el flujo maximiza, será la mayor cantidad de vértices con grado $i$ que se pueden obtener. 
 
 ¿Cuál es la magia en ```get_everyone_to_k```?
 ```
@@ -301,7 +354,7 @@ def edges_between_lesser_k(G:nx.Graph, lesser_k:List[int]):
     return eblk + one_is_lesser_k
 ```
 
-Entonces, describiendo lo que pasa en las funciones anteriores. Primero, bfs-like, se capturan todos los nodos de la primera partición (U), y se guardan todas las aristas que salgan de ellos que estén saturadas. Luego se crea un grafo solo con esas aristas. Se comprueba si ya es k_cubierto, y si no lo es se obtienen los nodos que aun no tienen grado k. 
+Entonces, describamos lo que pasa en las funciones anteriores. Primero, bfs-like, se capturan todos los nodos de la primera partición (U), y se guardan todas las aristas que salgan de ellos que estén saturadas. Luego se crea un grafo solo con esas aristas. Se comprueba si ya es k_cubierto, y si no lo es, se obtienen los nodos que aún no tienen grado k. 
 
 En ```edges_between_lesser_k``` se obtienen todas las aristas que inciden sobre dichos nodos, destacando que no puede quedar ninguna entre 2 nodos con grado menor que k, porque el flujo la hubiese encontrado. 
 
@@ -352,6 +405,8 @@ Entonces:
 
 `` T(n,m,k) = O(k * n * m^2) ``
 
+Consideramos que es importante destacar que el algoritmo podría ser $O(k*n^3)$ de haber elegido otro algoritmo para el flujo, pero en este caso la mayor parte del tiempo Edmonds-Karp es más eficiente ya que los caminos de s a t que nos interesan son directamente encontrados por el bfs.
+
 ### **Demostración de correctitud**
 
 * Con el flujo se obtiene la mayor cantidad de nodos con grado k
@@ -379,3 +434,4 @@ Entonces:
 
     Para que el subgrafo sea $k-cubierto$ hay que utilizar $x_i$ aristas por cada vértice i ($x_i = k - deg(i)$). Estas aristas existen, ya que en G, todos los vértices tienen al menos k aristas. No se pueden utilizar menos aristas que esas. Entonces el subgrafo que se obtiene de  llevar todos los nodos a grado k es mínimo. 
 
+Siempre es posible llevar los nodos a grado k, en el recorrido por las aristas no saturadas que inciden en ellos, ya que los nodos originalmente tenían grado mayor o igual que k, o sea tenían al menos k aristas incidiendo en cada uno. Como solo se ponen las aristas si el nodo aún no tiene grado k, nunca se ponen aristas innecesarias. Además la primera arista que al ponerla el grafo se vuelve $k-cubierto$ es también la última. Pues, a partir de ese momento cada vez que se pregunte si alguno de los vértices de la arista tiene grado menor que k la respuesta será ``False`` y no se colocarán más aristas en el subgrafo.
