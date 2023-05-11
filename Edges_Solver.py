@@ -1,7 +1,17 @@
 import networkx as nx
 from typing import Tuple, List
 from Generator import bipartition
-from Vertices_Solver import solver_1
+
+def mix_solver(G:nx.Graph):
+    min_degree = get_min_degree(G)
+    sol = {k:(None,0) for k in range (min_degree+1)}
+    A, B = bipartition(G)
+    for k in sol:
+        if k < 3:
+            sol[k] = backtrack_bottom_up(G,k, max(len(A),len(B)))
+        else:    
+            sol[k] = backtrack_top_down(G,k, max(len(A),len(B)))
+    return sol
 
 def top_down_solver(G:nx.Graph):
     min_degree = get_min_degree(G)
@@ -20,13 +30,12 @@ def bottom_up_solver(G:nx.Graph):
     return sol
 
 def get_min_degree(G:nx.Graph):
-    # S = [G.subgraph(c).copy() for c in nx.connected_components(G)]
     min_degree = float('inf')
     for node in G:
         node_degree = G.degree[node]
         if node_degree < min_degree:
             min_degree = node_degree
-    print("min degree : ",min_degree)
+    
     return min_degree
 
 def K_cover(G:nx.Graph,k:int,lesser=False):

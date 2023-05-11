@@ -7,32 +7,19 @@ def get_min_degree(G:nx.Graph):
         node_degree = G.degree[node]
         if node_degree < min_degree:
             min_degree = node_degree
-    print("min degree : ",min_degree)
+    
     return S, min_degree
 
 def first_fase (G:nx.Graph):
     S, min_degree = get_min_degree(G)
     valid_cc_for_k ={}
     valid_cc_for_k[0] = S 
-    G_reducing = G.copy()
+    
     for k in range(1,min_degree+1):
-        valid_cc_for_k[k], G_reducing = CC_degree_bigger_k(G_reducing,k)
+        valid_cc_for_k[k] = S
+        # valid_cc_for_k[k], G_reducing = CC_degree_bigger_k(G_reducing,k)
         # is garanteed that in every connected component the nodes have degree >= k. Later we most find the minimum subgraph that holds that condition
-
-
     return valid_cc_for_k
-
-def CC_degree_bigger_k(G:nx.Graph,k):
-    change = True
-    while change:
-        change = False
-        for node in G:
-            node_degree = G.degree[node]
-            if node_degree < k:
-                change = True
-                G.remove_node(node)
-    S = [G.subgraph(c).copy() for c in nx.connected_components(G)]
-    return S, G
 
 def second_fase(original_G:nx.Graph,valid_cc_for_k:dict):
     result_for_k = {}

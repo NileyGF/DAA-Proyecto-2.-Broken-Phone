@@ -1,5 +1,4 @@
 import random
-import time
 import networkx as nx
 
 def Gen_Bipartite_Graph(min_nodes, max_nodes):
@@ -25,7 +24,7 @@ def Gen_Bipartite_Graph(min_nodes, max_nodes):
             E.append((u, v))
             edge_count += 1
     G.add_edges_from(E)
-    return G #, A, B, E
+    return G 
 
 def bipartition(G:nx.Graph):
     A = []

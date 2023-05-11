@@ -21,12 +21,13 @@ Luego de entender el problema, automáticamente pensó dos cosas:
 ## Convirtiendo el problema 
 
 No hay mucha transformación que hacer sobre el problema, pero lo intentamos.
+
 Dado un grafo no dirigido, bipartito $G = ((U \cup\ V) , E )$, con $U$ nodos en el la primera parte, $V$ nodos en la segunda parte y E aristas. Se quiere encontrar el subgrafo de $G$ con la menor cantidad de **vértices** tal que todos los vértices tienen grado mayor o igual que $k$; para $k \in\ [0, MinDegree(G)]$. $MinDegree(G)= min(degree(u) : u \in\ (U \cup\ V))$
 
 ## Herramientas y Bibliotecas utilizadas
 
 ### Networkx
-La biblioteca más empleada es networkx, aprovechando la estructura de grafos que definen, que permite diseñar grefos bipartitos y guardar la bipartición, graficar comodamente grafos, así como soporte para grafos no dirigidos y dirigidos.
+La biblioteca más empleada es networkx, aprovechando la estructura de grafos que definen, que permite diseñar grafos bipartitos y guardar la bipartición, graficar comodamente grafos, así como soporte para grafos no dirigidos y dirigidos.
 
 ### Generador
 En el archivo Generator.py hay dos funciones: 
@@ -87,7 +88,7 @@ Dado un grafo no dirigido, bipartito $G = ((U \cup\ V) , E )$, con $U$ nodos en 
 
     Demostración:
 
-    Como el grado de un vértice consta de la cantidad de aristas que inciden en él, al sumar todos los grados en un grafo se tienen en cuanta todas las aristas. Como cada arista incide en 2 vértices se suman las aristas exactamante 2 veces. Luego, la suma de los grados es 2 veces la cantidad de aristas (2*m).
+    Como el grado de un vértice consta de la cantidad de aristas que inciden en él, al sumar todos los grados en un grafo se tienen en cuenta todas las aristas. Como cada arista incide en 2 vértices se suman las aristas exactamante 2 veces. Luego, la suma de los grados es 2 veces la cantidad de aristas (2*m).
 
 <!-- 2. Un grafo G es regular de grado k si todos los vértices tienen grado k -->
 Sobre grafos bipartitos:
@@ -114,8 +115,8 @@ Sobre grafos bipartitos:
 
     Demostración:
 
-    Supongamos que G es bipartito y un subgrafo de G, H, no lo es. Entonces H contiene algún ciclo de longitud impar. Sea ese ciclo $C = { v_1, v_2, V_3, ...,v_1}$
-    Como H es el resultado de quitar vértices o aristas de G, los vértices de H son subconjunto de los vértices de G y las aristas de H son subconjunto de las aristas de G. Entonces, todas las aristas de $C$ están en G; luego $C$ está en G. Sin embargo G no puede contener un ciclo de longitud impar porque es bipartito. Entonces hay una contradicción y por reducción al absurdo H no puede tener ciclos de longitud impar. Si H no tiene ciclos delongitud impar entonces H es bipartito.
+    Supongamos que G es bipartito y un subgrafo de G, H, no lo es. Entonces H contiene algún ciclo de longitud impar. Sea ese ciclo $C = { v_1, v_2, v_3, ...,v_1}$
+    Como H es el resultado de quitar vértices o aristas de G, los vértices de H son subconjunto de los vértices de G y las aristas de H son subconjunto de las aristas de G. Entonces, todas las aristas de $C$ están en G; luego $C$ está en G. Sin embargo G no puede contener un ciclo de longitud impar porque es bipartito. Entonces hay una contradicción y por reducción al absurdo H no puede tener ciclos de longitud impar. Si H no tiene ciclos de longitud impar entonces H es bipartito.
     Luego todo subgrafo de un grafo bipartito es bipartito.
 
 
@@ -186,11 +187,38 @@ En esta implementación se mantiene la invariante de que el grafo siempre es $k-
 
 ## **Solución backtrack bottom-up**
 
+Con un subgrafo sin aristas, del grafo original, una lista con todas las aristas y el valor de k comienza este algoritmo. En cada iteración de la recursividad se comprueba si el grafo es $k-cubierto$, si lo es se retorna a la llamada anterior. Si no, se obtiene la lista de nodos con grado menor que k, o sea, a los que les faltan aristas para que la solución sea factible. Posteriormente se obtienen las aristas que están entre nodos con grado menor que k (que estén en la lista de aristas que recibe el algoritmo). Por cada una, se realiza un llamado recursivo poniendola en el grafo. Si algún llamado recursivo mejora el mínimo del grafo recibido como parámetro o de alguna arista anterior, se actualiza el mínimo. Aquí proponemos la misma poda de que si se alcanza durante el for, en alguna de las soluciones de poner una arista el mínimo posible, $Max(|U|, |V|)*k=$, entonces no es necesario seguir iterando.  
+
+```
+def backtrack_bottom_up_recursive(G:nx.Graph, k:int, edges:list, prune_min:int):
+    min_graph = G
+    min_n_edges = G.number_of_edges()
+    
+    k_cover, lesser_k = K_cover(G,k,True)
+    if k_cover:
+        return min_graph, min_n_edges
+    add_edges = edges_between_lesser_k(G,edges,lesser_k)
+    min_n_edges = float('inf')
+    for edge in add_edges:
+        G_p = G.copy()
+        G_p.add_edge(*edge)
+        E_p = edges.copy()
+        E_p.remove(edge)
+        e_min_gr, e_min_n_e = backtrack_bottom_up_recursive(G_p,k,E_p,prune_min)
+        if e_min_n_e < min_n_edges:
+            min_graph = e_min_gr
+            min_n_edges = e_min_n_e
+        if min_n_edges == (prune_min)*k:
+            return min_graph, min_n_edges
+    return min_graph, min_n_edges
+```
+
 ## **Solución backtrack mix-solver**
 
-explicación .............................
+A pesar de ser soluciones de backtrack, se puede notar que en general nunca comprueban todos los casos. Si el subgrafo mínimo tiene $Max(|U|, |V|)*k=$ aristas, entonces cuando se encuentre el primero que con dicha cantidad de aristas, se deja de invocar nuevas recursiones. Además en ambos casos solo se prueban modificaciones útiles, quitando o poniendo aristas que puedan mejorar la solución solamente. 
 
-demostración de correctitud (con las podas) ...........................
+Sin embargo, quisimos mejorarlo aún más combinando los dos métodos en uno. Utilizamos el acercamiento bottom-up para $k < 3$ y para el resto, el top-down. Sacando lo mejor de ambos, y mostrando un comportamiento mejor que ellos por separados. 
+
 
 ## **Solución de emparejamientos con subestructura óptima**
 
@@ -422,7 +450,7 @@ Consideramos que es importante destacar que el algoritmo podría ser $O(k*n^3)$ 
 
     El flujo máximo tiene la mayor capacidad saturada  y como todas las aristas entre U y V tienen capacidad 1 eso es equivalente a decir que tiene la mayor cantidad de aristas entre U y V saturadas. 
 
-    Eso se traduce en que al terminar el flujo se obtienen la mayor suma de grados de los vértices donde todos tienen a lo sumo grado k. Eso implica que los que aún no tienen grado k necesitan enlazarse con nodos con grado mayor que k para alcanzar el grado k y con él la $k-cobertura$ del subgrafo.
+    Eso se traduce en que al terminar el flujo se obtienen la mayor suma de grados de los vértices donde todos tienen a lo sumo grado k. Eso implica que los que aún no tienen grado k necesitan enlazarse con nodos con grado mayor o igual que k para alcanzar el grado k y con él la $k-cobertura$ del subgrafo.
 
     El valor del flujo es a lo sumo $Min(|U|,|V|) * k \leq\ Max(|U|,|V|) * k \leq\ $ la mínima cantidad de aristas de un subgrafo $k-cubierto$. Así que hasta ahora tenemos un subgrafo con menos aristas que el mínimo subgrafo $k-cubierto$.
 
